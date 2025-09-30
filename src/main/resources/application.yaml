@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: InnowiseAuthentificationService
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/main-changelog.xml
+
