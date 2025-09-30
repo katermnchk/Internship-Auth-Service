@@ -10,14 +10,12 @@ import jakarta.annotation.PostConstruct;
 import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class JwtServiceImpl implements JWTService {
 
   @Value("${security.jwt.secret-key}")
