@@ -10,13 +10,13 @@ public class AuthUserRowMapper implements RowMapper<AuthUser> {
 
   @Override
   public AuthUser mapRow(ResultSet rs, int rowNum) throws SQLException {
-    return new AuthUser(
-        rs.getLong("id"),
-        rs.getString("email"),
-        rs.getString("password_hash"),
-        rs.getTimestamp("created_at").toInstant(),
-        rs.getTimestamp("updated_at").toInstant()
-    );
+    AuthUser user = new AuthUser();
+    user.setId(rs.getLong("id"));
+    user.setEmail(rs.getString("email"));
+    user.setPasswordHash(rs.getString("password_hash"));
+    user.setCreatedAt(rs.getTimestamp("created_at").toInstant());
+    user.setUpdatedAt(rs.getTimestamp("updated_at").toInstant());
+    return user;
   }
 
 }
