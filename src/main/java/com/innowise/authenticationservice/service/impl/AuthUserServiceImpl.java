@@ -1,14 +1,19 @@
-package com.innowise.authenticationservice.service;
+package com.innowise.authenticationservice.service.impl;
 
 import com.innowise.authenticationservice.dto.AuthRequestDto;
 import com.innowise.authenticationservice.dto.AuthResponseDto;
 import com.innowise.authenticationservice.dto.PasswordUpdateDto;
 import com.innowise.authenticationservice.entity.AuthUser;
+import com.innowise.authenticationservice.exception.InvalidPasswordException;
+import com.innowise.authenticationservice.exception.UserAlreadyExistsException;
+import com.innowise.authenticationservice.exception.UserNotFoundException;
 import com.innowise.authenticationservice.repository.AuthUserDao;
+import com.innowise.authenticationservice.service.AuthUserService;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,15 +23,29 @@ public class AuthUserServiceImpl implements AuthUserService {
   private final PasswordEncoder passwordEncoder;
 
   @Override
+  @Transactional
   public AuthResponseDto register(AuthRequestDto requestDto) {
 
     if (authUserDao.existsByEmail(requestDto.getEmail())) {
-      throw new RuntimeException("User with email already exists");
+      throw new UserAlreadyExistsException(requestDto.getEmail());
     }
 
     String hashedPassword = passwordEncoder.encode(requestDto.getPassword());
     AuthUser savedUser = authUserDao.save(requestDto.getEmail(), hashedPassword);
     return new AuthResponseDto(savedUser.getId(), savedUser.getEmail());
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public AuthResponseDto login(AuthRequestDto requestDto) {
+    AuthUser user = authUserDao.getUserByEmail(requestDto.getEmail())
+        .orElseThrow(() -> new UserNotFoundException(requestDto.getEmail()));
+
+    if(!passwordEncoder.matches(requestDto.getPassword(), user.getPasswordHash())) {
+      throw new InvalidPasswordException();
+    }
+
+    return new AuthResponseDto(user.getId(), user.getEmail());
   }
 
   @Override
@@ -47,8 +66,11 @@ public class AuthUserServiceImpl implements AuthUserService {
   }
 
   @Override
+  @Transactional
   public void updatePassword(PasswordUpdateDto dto) {
+    //TODO add checking the old password(?)
     String hashedPassword = passwordEncoder.encode(dto.getNewPassword());
     authUserDao.updatePassword(dto.getUserId(), hashedPassword);
   }
+
 }

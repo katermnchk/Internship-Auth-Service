@@ -1,7 +1,8 @@
-package com.innowise.authenticationservice.repository;
+package com.innowise.authenticationservice.repository.impl;
 
 import com.innowise.authenticationservice.entity.RefreshToken;
 import com.innowise.authenticationservice.mapper.RefreshTokenRowMapper;
+import com.innowise.authenticationservice.repository.RefreshTokenDao;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;

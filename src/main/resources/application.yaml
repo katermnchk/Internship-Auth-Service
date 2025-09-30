@@ -11,3 +11,10 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/main-changelog.xml
 
+  security:
+    jwt:
+      secretKey: ${JWT_SECRET:myDefaultSecret}
+      accessTokenExpiration: ${JWT_ACCESS_EXP:900000}
+      refreshTokenExpiration: ${JWT_REFRESH_EXP:604800000}
+
+

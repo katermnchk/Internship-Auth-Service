@@ -9,6 +9,8 @@ public interface AuthUserService {
 
   AuthResponseDto register(AuthRequestDto requestDto);
 
+  AuthResponseDto login(AuthRequestDto requestDto);
+
   Optional<AuthResponseDto> getByEmail(String email);
 
   Optional<AuthResponseDto> getById(Long id);

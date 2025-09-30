@@ -1,7 +1,8 @@
-package com.innowise.authenticationservice.repository;
+package com.innowise.authenticationservice.repository.impl;
 
 import com.innowise.authenticationservice.entity.AuthUser;
 import com.innowise.authenticationservice.mapper.AuthUserRowMapper;
+import com.innowise.authenticationservice.repository.AuthUserDao;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
