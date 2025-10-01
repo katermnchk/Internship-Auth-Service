@@ -8,6 +8,7 @@ import com.innowise.authenticationservice.service.RefreshTokenService;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,17 +16,23 @@ import org.springframework.stereotype.Service;
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
   private final RefreshTokenDao refreshTokenDao;
+  private final PasswordEncoder passwordEncoder;
 
   @Override
   public RefreshToken createToken(RefreshTokenDto refreshTokenDto) {
+    String hashedToken = passwordEncoder.encode(refreshTokenDto.getToken());//maybe there is another way for hashing
     Instant expiresAt = Instant.now().plusMillis(refreshTokenDto.getTimeToLive());
-    return refreshTokenDao.save(refreshTokenDto.getUserId(), refreshTokenDto.getToken(), expiresAt);
+    return refreshTokenDao.save(refreshTokenDto.getUserId(), hashedToken, expiresAt);
   }
 
   @Override
-  public Optional<RefreshToken> validateToken(String token) {
-    return refreshTokenDao.getActive(token);
+  public Optional<RefreshToken> validateToken(String rawToken) {
+    return refreshTokenDao.getAllActiveTokens()
+        .stream()
+        .filter(rt -> passwordEncoder.matches(rawToken, rt.getToken()))
+        .findFirst();
   }
+
 
   @Override
   public void revokeToken(Long id) {

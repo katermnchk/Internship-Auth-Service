@@ -31,6 +31,12 @@ public class RefreshTokenDaoImpl implements RefreshTokenDao {
         WHERE token = ? AND revoked = FALSE AND expires_at > NOW()
         """;
 
+    static final String GET_ALL_ACTIVE = """
+        SELECT id, user_id, token, expires_at, revoked, created_at
+        FROM refresh_tokens
+        WHERE revoked = FALSE AND expires_at > NOW()
+        """;
+
     static final String GET_ALL_BY_USER = """
         SELECT id, user_id, token, expires_at, revoked, created_at
         FROM refresh_tokens
@@ -68,6 +74,11 @@ public class RefreshTokenDaoImpl implements RefreshTokenDao {
         mapper,
         token
     ).stream().findFirst();
+  }
+
+  @Override
+  public List<RefreshToken> getAllActiveTokens() {
+    return jdbcTemplate.query(SQL.GET_ALL_ACTIVE, mapper);
   }
 
   @Override

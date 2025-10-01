@@ -11,6 +11,8 @@ public interface RefreshTokenDao {
 
   Optional<RefreshToken> getActive(String token);
 
+  List<RefreshToken> getAllActiveTokens();
+
   List<RefreshToken> getAllByUser(Long userId);
 
   void revokeById(Long id);

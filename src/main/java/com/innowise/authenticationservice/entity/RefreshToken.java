@@ -15,6 +15,6 @@ public class RefreshToken {
   private String token;
   private Instant expiresAt;
   private boolean revoked;
-  private Instant created_at;
+  private Instant createdAt;
 
 }
