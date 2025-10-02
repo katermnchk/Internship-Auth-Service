@@ -18,7 +18,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
   @Override
   public RefreshToken createToken(RefreshTokenDto refreshTokenDto) {
-    String hashedToken = PasswordUtil.hashPassword(refreshTokenDto.getToken()); //TODO
+    String hashedToken = PasswordUtil.hashPassword(refreshTokenDto.getToken()); //I'm not sure that it's a good practice
     Instant expiresAt = Instant.now().plusMillis(refreshTokenDto.getTimeToLive());
     return refreshTokenDao.save(refreshTokenDto.getUserId(), hashedToken, expiresAt);
   }

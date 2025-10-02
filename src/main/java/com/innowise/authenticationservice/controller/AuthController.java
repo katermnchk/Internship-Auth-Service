@@ -5,10 +5,10 @@ import com.innowise.authenticationservice.dto.AuthResponseDto;
 import com.innowise.authenticationservice.dto.AuthTokensDto;
 import com.innowise.authenticationservice.dto.PasswordUpdateDto;
 import com.innowise.authenticationservice.dto.response.ApiResponse;
-import com.innowise.authenticationservice.exception.InvalidRefreshTokenException;
 import com.innowise.authenticationservice.service.AuthUserService;
 import com.innowise.authenticationservice.service.AuthenticationService;
 import com.innowise.authenticationservice.service.JWTService;
+import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,16 +77,20 @@ public class AuthController {
       @RequestParam("accessToken") String accessToken
   ) {
     Map<String, Object> result = new HashMap<>();
-    boolean isValid = jwtService.validateToken(accessToken);
+    Claims claims = jwtService.validateToken(accessToken);
+
+    boolean isValid = claims != null;
     result.put("isValid", isValid);
-    if (!isValid) {
-      result.put("message", "Token is invalid or expired");
-    } else {
+    if (isValid) {
       result.put("message", "Token is valid");
+      result.put("userId", claims.getSubject());
+    } else {
+      result.put("message", "Token is invalid or expired");
     }
-    return ResponseEntity
-        .ok(new ApiResponse<>(HttpStatus.OK.value(),
-            "Token validation result", result));
+
+    return ResponseEntity.ok(
+        new ApiResponse<>(HttpStatus.OK.value(), "Token validation result", result)
+    );
   }
 
 

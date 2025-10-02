@@ -15,4 +15,11 @@ public class AuthUser {
   private String passwordHash;
   private Instant createdAt;
   private Instant updatedAt;
+
+  public AuthUser(Long id, String email, String passwordHash) {
+    this.id = id;
+    this.email = email;
+    this.passwordHash = passwordHash;
+  }
+
 }

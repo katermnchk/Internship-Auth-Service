@@ -42,13 +42,16 @@ public class JwtServiceImpl implements JWTService {
   }
 
   @Override
-  public boolean validateToken(String token) {
+  public Claims validateToken(String token) {
     try {
-      Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token);
-      return true;
+      return Jwts.parserBuilder()
+          .setSigningKey(signingKey)
+          .build()
+          .parseClaimsJws(token)
+          .getBody();
     } catch (JwtException | IllegalArgumentException e) {
       log.error("Invalid JWT token: {}", e.getMessage());
-      return false;
+      return null;
     }
   }
 

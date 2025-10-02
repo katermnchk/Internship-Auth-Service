@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler({
       UserAlreadyExistsException.class
   })
-  public ResponseEntity<ApiErrorResponse> handleConflictException(RuntimeException e) {
+  public ResponseEntity<ApiErrorResponse> handleConflictException(UserAlreadyExistsException e) {
     log.warn("Entity conflict: {}", e.getMessage(), e);
     return buildErrorResponse(HttpStatus.CONFLICT, List.of(e.getMessage()), ErrorMessages.CONFLICT);
   }

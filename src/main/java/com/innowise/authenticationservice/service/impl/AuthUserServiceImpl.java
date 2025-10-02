@@ -1,6 +1,7 @@
 package com.innowise.authenticationservice.service.impl;
 
 import com.innowise.authenticationservice.exception.InvalidOldPasswordException;
+import com.innowise.authenticationservice.service.RefreshTokenService;
 import com.innowise.authenticationservice.util.PasswordUtil;
 import com.innowise.authenticationservice.dto.AuthRequestDto;
 import com.innowise.authenticationservice.dto.AuthResponseDto;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthUserServiceImpl implements AuthUserService {
 
   private final AuthUserDao authUserDao;
+  private final RefreshTokenService refreshTokenService;
 
   @Override
   @Transactional
@@ -78,6 +80,8 @@ public class AuthUserServiceImpl implements AuthUserService {
 
     String hashedPassword = BCrypt.hashpw(dto.getNewPassword(), BCrypt.gensalt());
     authUserDao.updatePassword(dto.getUserId(), hashedPassword);
+
+    refreshTokenService.revokeAllForUser(user.getId());
   }
 
 }

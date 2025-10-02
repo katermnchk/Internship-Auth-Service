@@ -23,5 +23,4 @@ public class AuthRequestDto {
   @NotBlank(message = "Password can't be empty")
   @Size(min = 8, max = 255, message = "Password should contain from 8 to 255 symbols")
   private String password;
-
 }

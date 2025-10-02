@@ -6,7 +6,4 @@ public class InvalidOldPasswordException extends RuntimeException {
     super("Old password is incorrect");
   }
 
-  public InvalidOldPasswordException(String message) {
-    super(message);
-  }
 }

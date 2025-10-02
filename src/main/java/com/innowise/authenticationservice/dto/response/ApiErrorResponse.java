@@ -3,7 +3,9 @@ package com.innowise.authenticationservice.dto.response;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import lombok.Getter;
 
+@Getter
 public class ApiErrorResponse {
   private final List<String> message;
   private final OffsetDateTime timestamp;
