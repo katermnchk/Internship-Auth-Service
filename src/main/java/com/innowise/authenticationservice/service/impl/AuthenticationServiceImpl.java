@@ -10,7 +10,8 @@ import com.innowise.authenticationservice.service.AuthUserService;
 import com.innowise.authenticationservice.service.AuthenticationService;
 import com.innowise.authenticationservice.service.JWTService;
 import com.innowise.authenticationservice.service.RefreshTokenService;
-import java.util.UUID;
+import com.innowise.authenticationservice.util.TokenUtil;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -31,9 +32,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   @Transactional
   public AuthTokensDto login(AuthRequestDto dto) {
     AuthResponseDto user = authUserService.login(dto);
-    String accessToken = jwtService.generateAccessToken(user.getId());
 
-    String refreshTokenValue = UUID.randomUUID().toString();
+    Map<String, String> tokens = TokenUtil.generateTokens(user, jwtService);
+    String accessToken = tokens.get("accessToken");
+    String refreshTokenValue = tokens.get("refreshToken");
+
     refreshTokenService.revokeAllForUser(user.getId());
 
     RefreshTokenDto refreshTokenDto = new RefreshTokenDto(user.getId(), refreshTokenValue, refreshTokenExpiration);
@@ -51,10 +54,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     refreshTokenService.revokeToken(refreshToken.getId());
 
-    String newAccessToken = jwtService.generateAccessToken(refreshToken.getUserId());
+    AuthResponseDto user = new AuthResponseDto(refreshToken.getUserId(), null);
+    Map<String, String> tokens = TokenUtil.generateTokens(user, jwtService);
+    String newAccessToken = tokens.get("accessToken");
+    String newRefreshTokenValue = tokens.get("refreshToken");
 
-    String newRefreshTokenValue = UUID.randomUUID().toString();
-    RefreshTokenDto newRefreshTokenDto = new RefreshTokenDto(refreshToken.getUserId(), newRefreshTokenValue, refreshTokenExpiration);
+    RefreshTokenDto newRefreshTokenDto =
+        new RefreshTokenDto(refreshToken.getUserId(), newRefreshTokenValue, refreshTokenExpiration);
     refreshTokenService.createToken(newRefreshTokenDto);
 
     return new AuthTokensDto(newAccessToken, newRefreshTokenValue);
