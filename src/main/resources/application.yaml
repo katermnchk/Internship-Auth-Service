@@ -18,4 +18,6 @@ security:
     refresh-token-expiration: ${JWT_REFRESH_EXP:604800000}
 
 
-
+app:
+  api:
+    base-path: /api/v1

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Repository;
 public class RefreshTokenDaoImpl implements RefreshTokenDao {
 
   private final JdbcTemplate jdbcTemplate;
-  private final RefreshTokenRowMapper mapper = new RefreshTokenRowMapper();
+  private final RefreshTokenRowMapper mapper;
 
   private static final class SQL {
     static final String CREATE = """

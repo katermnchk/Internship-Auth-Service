@@ -17,6 +17,9 @@ public class PasswordUpdateDto {
   @NotNull(message = "userId can't be empty")
   private Long userId;
 
+  @NotBlank(message = "Old password can't be empty")
+  private String oldPassword;
+
   @NotBlank(message = "New password can't be empty")
   @Size(min = 8, max = 255, message = "Password should contain from 8 to 255 symbols")
   private String newPassword;

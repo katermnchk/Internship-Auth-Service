@@ -34,7 +34,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     String accessToken = jwtService.generateAccessToken(user.getId());
 
     String refreshTokenValue = UUID.randomUUID().toString();
-
     refreshTokenService.revokeAllForUser(user.getId());
 
     RefreshTokenDto refreshTokenDto = new RefreshTokenDto(user.getId(), refreshTokenValue, refreshTokenExpiration);

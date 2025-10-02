@@ -1,5 +1,7 @@
 package com.innowise.authenticationservice.service.impl;
 
+import com.innowise.authenticationservice.exception.InvalidOldPasswordException;
+import com.innowise.authenticationservice.util.PasswordUtil;
 import com.innowise.authenticationservice.dto.AuthRequestDto;
 import com.innowise.authenticationservice.dto.AuthResponseDto;
 import com.innowise.authenticationservice.dto.PasswordUpdateDto;
@@ -11,7 +13,7 @@ import com.innowise.authenticationservice.repository.AuthUserDao;
 import com.innowise.authenticationservice.service.AuthUserService;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthUserServiceImpl implements AuthUserService {
 
   private final AuthUserDao authUserDao;
-  private final PasswordEncoder passwordEncoder;
 
   @Override
   @Transactional
@@ -30,8 +31,8 @@ public class AuthUserServiceImpl implements AuthUserService {
       throw new UserAlreadyExistsException(requestDto.getEmail());
     }
 
-    String hashedPassword = passwordEncoder.encode(requestDto.getPassword());
-    AuthUser savedUser = authUserDao.save(requestDto.getEmail(), hashedPassword);
+    String hashedPassword = PasswordUtil.hashPassword(requestDto.getPassword());
+    AuthUser savedUser = authUserDao.save(requestDto.getUserId() ,requestDto.getEmail(), hashedPassword);
     return new AuthResponseDto(savedUser.getId(), savedUser.getEmail());
   }
 
@@ -41,7 +42,7 @@ public class AuthUserServiceImpl implements AuthUserService {
     AuthUser user = authUserDao.getUserByEmail(requestDto.getEmail())
         .orElseThrow(() -> new UserNotFoundException(requestDto.getEmail()));
 
-    if(!passwordEncoder.matches(requestDto.getPassword(), user.getPasswordHash())) {
+    if (!PasswordUtil.checkPassword(requestDto.getPassword(), user.getPasswordHash())) {
       throw new InvalidPasswordException();
     }
 
@@ -68,8 +69,14 @@ public class AuthUserServiceImpl implements AuthUserService {
   @Override
   @Transactional
   public void updatePassword(PasswordUpdateDto dto) {
-    //TODO add checking the old password(?)
-    String hashedPassword = passwordEncoder.encode(dto.getNewPassword());
+    AuthUser user = authUserDao.getUserById(dto.getUserId())
+        .orElseThrow(() -> new UserNotFoundException(dto.getUserId()));
+
+    if (!PasswordUtil.checkPassword(dto.getOldPassword(), user.getPasswordHash())) {
+      throw new InvalidOldPasswordException();
+    }
+
+    String hashedPassword = BCrypt.hashpw(dto.getNewPassword(), BCrypt.gensalt());
     authUserDao.updatePassword(dto.getUserId(), hashedPassword);
   }
 

@@ -14,6 +14,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AuthRequestDto {
 
+  private Long userId;
+
   @NotBlank(message = "Email can't be empty")
   @Email(message = "Email should be valid")
   private String email;
@@ -21,4 +23,5 @@ public class AuthRequestDto {
   @NotBlank(message = "Password can't be empty")
   @Size(min = 8, max = 255, message = "Password should contain from 8 to 255 symbols")
   private String password;
+
 }

@@ -18,8 +18,8 @@ public class AuthUserDaoImpl implements AuthUserDao {
 
   public static final class SQL {
     static final String CREATE_USER = """
-        INSERT INTO auth_users (email, password_hash)
-        VALUES (?, ?)
+        INSERT INTO auth_users (user_id, email, password_hash)
+        VALUES (?, ?, ?)
         RETURNING id, email, password_hash, created_at, updated_at
         """;
 
@@ -49,10 +49,11 @@ public class AuthUserDaoImpl implements AuthUserDao {
 
 
   @Override
-  public AuthUser save(String email, String passwordHash) {
+  public AuthUser save(Long userId, String email, String passwordHash) {
     return jdbcTemplate.queryForObject(
         SQL.CREATE_USER,
         mapper,
+        userId,
         email,
         passwordHash
     );

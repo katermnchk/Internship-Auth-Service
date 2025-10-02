@@ -9,13 +9,13 @@ public class RefreshTokenRowMapper implements RowMapper<RefreshToken> {
 
   @Override
   public RefreshToken mapRow(ResultSet rs, int rowNum) throws SQLException {
-    return new RefreshToken(
-        rs.getLong("id"),
-        rs.getLong("user_id"),
-        rs.getString("token"),
-        rs.getTimestamp("expires_at").toInstant(),
-        rs.getBoolean("revoked"),
-        rs.getTimestamp("created_at").toInstant()
-    );
+    RefreshToken refreshToken = new RefreshToken();
+    refreshToken.setId(rs.getLong("id"));
+    refreshToken.setUserId(rs.getLong("user_id"));
+    refreshToken.setToken(rs.getString("token"));
+    refreshToken.setExpiresAt(rs.getTimestamp("expires_at").toInstant());
+    refreshToken.setRevoked(rs.getBoolean("revoked"));
+    refreshToken.setCreatedAt(rs.getTimestamp("created_at").toInstant());
+    return refreshToken;
   }
 }
