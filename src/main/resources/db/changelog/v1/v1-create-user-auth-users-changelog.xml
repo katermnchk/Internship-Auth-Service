@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="v1-1" author="ramenchyk-katsiaryna">
+    <createTable tableName="auth_users">
+      <column name="id" type="bigint" autoIncrement="true">
+        <constraints primaryKey="true" nullable="false" />
+      </column>
+      <column name="user_id" type="bigint">
+        <constraints nullable="false" unique="true" />
+      </column>
+      <column name="email" type="varchar(255)">
+        <constraints nullable="false" unique="true"/>
+      </column>
+      <column name="password_hash" type="varchar(100)">
+        <constraints nullable="false" />
+      </column>
+      <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP()">
+        <constraints nullable="false"/>
+      </column>
+      <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP()">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <createIndex tableName="auth_users" indexName="idx_auth_users_email">
+      <column name="email" />
+    </createIndex>
+
+    <sql>
+        ALTER TABLE auth_users
+        ADD CONSTRAINT chk_email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+    </sql>
+
+    <rollback>
+      <dropTable tableName="auth_users" />
+      <sql>
+        ALTER TABLE users
+        DROP CONSTRAINT IF EXISTS chk_email_format
+      </sql>
+    </rollback>
+
+  </changeSet>
+</databaseChangeLog>

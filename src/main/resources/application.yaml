@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: InnowiseAuthentificationService
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/main-changelog.xml
+
+security:
+  jwt:
+    secret-key: ${JWT_SECRET:mySuperSuperSecretDefaultSecretKey}
+    access-token-expiration: ${JWT_ACCESS_EXP:900000}
+    refresh-token-expiration: ${JWT_REFRESH_EXP:604800000}
+
+
+app:
+  api:
+    base-path: /api/v1
