@@ -1,0 +1,44 @@
+services:
+  postgres_authservice:
+    image: postgres:15
+    container_name: postgres_authservice
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - pgdata_authservice:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app_network
+
+  auth-service:
+    build: .
+    image: auth-service:latest
+    container_name: innowise_auth_service
+    depends_on:
+      postgres_authservice:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_authservice:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SERVER_PORT: 9090
+    ports:
+      - "9090:9090"
+    networks:
+      - app_network
+
+volumes:
+  pgdata_authservice:
+
+networks:
+  app_network:
+    driver: bridge
