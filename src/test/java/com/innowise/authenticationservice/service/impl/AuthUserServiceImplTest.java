@@ -69,7 +69,7 @@ class AuthUserServiceImplTest {
 
     when(authUserDao.existsByEmail(request.getEmail())).thenReturn(false);
     passwordUtilMock.when(() -> PasswordUtil.hashPassword(request.getPassword())).thenReturn("hashedPass");
-    when(authUserDao.save(request.getUserId(), request.getEmail(), "hashedPass")).thenReturn(savedUser);
+    when(authUserDao.save(request.getEmail(), "hashedPass")).thenReturn(savedUser);
 
     AuthResponseDto response = authUserService.register(request);
 
@@ -78,7 +78,7 @@ class AuthUserServiceImplTest {
         () -> assertThat(response.getEmail(), is(savedUser.getEmail()))
     );
 
-    verify(authUserDao).save(request.getUserId(), request.getEmail(), "hashedPass");
+    verify(authUserDao).save(request.getEmail(), "hashedPass");
   }
 
   @Test
@@ -90,7 +90,7 @@ class AuthUserServiceImplTest {
     assertThrows(UserAlreadyExistsException.class,
         () -> authUserService.register(request));
 
-    verify(authUserDao, never()).save(any(), any(), any());
+    verify(authUserDao, never()).save(any(), any());
   }
 
   @Test

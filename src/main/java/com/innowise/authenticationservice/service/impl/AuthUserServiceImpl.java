@@ -34,7 +34,7 @@ public class AuthUserServiceImpl implements AuthUserService {
     }
 
     String hashedPassword = PasswordUtil.hashPassword(requestDto.getPassword());
-    AuthUser savedUser = authUserDao.save(requestDto.getUserId() ,requestDto.getEmail(), hashedPassword);
+    AuthUser savedUser = authUserDao.save(requestDto.getEmail(), hashedPassword);
     return new AuthResponseDto(savedUser.getId(), savedUser.getEmail());
   }
 

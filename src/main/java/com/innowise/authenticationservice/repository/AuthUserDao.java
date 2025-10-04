@@ -5,7 +5,7 @@ import java.util.Optional;
 
 public interface AuthUserDao {
 
-  AuthUser save(Long userId, String email, String passwordHash);
+  AuthUser save(String email, String passwordHash);
 
   Optional<AuthUser> getUserByEmail(String email);
 
