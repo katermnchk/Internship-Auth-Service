@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${DB_PORT}:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata_authservice:/var/lib/postgresql/data
     healthcheck:
@@ -21,7 +21,7 @@ services:
   auth-service:
     build: .
     image: auth-service:latest
-    container_name: innowise_auth_service
+    container_name: innowise-auth-service
     depends_on:
       postgres_authservice:
         condition: service_healthy
@@ -41,4 +41,4 @@ volumes:
 
 networks:
   app_network:
-    driver: bridge
+    external: true
