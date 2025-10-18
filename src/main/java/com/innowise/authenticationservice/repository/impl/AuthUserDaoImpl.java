@@ -18,19 +18,19 @@ public class AuthUserDaoImpl implements AuthUserDao {
 
   public static final class SQL {
     static final String CREATE_USER = """
-        INSERT INTO auth_users (email, password_hash)
-        VALUES (?, ?)
-        RETURNING id, email, password_hash, created_at, updated_at
+        INSERT INTO auth_users (user_id, email, password_hash)
+        VALUES (?, ?, ?)
+        RETURNING id, user_id, email, password_hash, created_at, updated_at
         """;
 
     static final String GET_USER_BY_ID = """
-        SELECT id, email, password_hash, created_at, updated_at
+        SELECT id, user_id, email, password_hash, created_at, updated_at
         FROM auth_users
         WHERE id = ?
         """;
 
     static final String GET_USER_BY_EMAIL = """
-        SELECT id, email, password_hash, created_at, updated_at
+        SELECT id, user_id, email, password_hash, created_at, updated_at
         FROM auth_users
         WHERE email = ?
         """;
@@ -49,10 +49,11 @@ public class AuthUserDaoImpl implements AuthUserDao {
 
 
   @Override
-  public AuthUser save(String email, String passwordHash) {
+  public AuthUser save(Long userId, String email, String passwordHash) {
     return jdbcTemplate.queryForObject(
         SQL.CREATE_USER,
         mapper,
+        userId,
         email,
         passwordHash
     );

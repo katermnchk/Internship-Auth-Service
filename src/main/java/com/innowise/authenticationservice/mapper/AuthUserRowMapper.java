@@ -12,6 +12,7 @@ public class AuthUserRowMapper implements RowMapper<AuthUser> {
   public AuthUser mapRow(ResultSet rs, int rowNum) throws SQLException {
     AuthUser user = new AuthUser();
     user.setId(rs.getLong("id"));
+    user.setUserId(rs.getLong("user_id"));
     user.setEmail(rs.getString("email"));
     user.setPasswordHash(rs.getString("password_hash"));
     user.setCreatedAt(rs.getTimestamp("created_at").toInstant());

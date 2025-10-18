@@ -34,8 +34,8 @@ public class AuthUserServiceImpl implements AuthUserService {
     }
 
     String hashedPassword = PasswordUtil.hashPassword(requestDto.getPassword());
-    AuthUser savedUser = authUserDao.save(requestDto.getEmail(), hashedPassword);
-    return new AuthResponseDto(savedUser.getId(), savedUser.getEmail());
+    AuthUser savedUser = authUserDao.save(requestDto.getUserId(), requestDto.getEmail(), hashedPassword);
+    return new AuthResponseDto(savedUser.getId(), savedUser.getUserId(), savedUser.getEmail());
   }
 
   @Override
@@ -48,19 +48,19 @@ public class AuthUserServiceImpl implements AuthUserService {
       throw new InvalidPasswordException();
     }
 
-    return new AuthResponseDto(user.getId(), user.getEmail());
+    return new AuthResponseDto(user.getId(), user.getUserId(), user.getEmail());
   }
 
   @Override
   public Optional<AuthResponseDto> getByEmail(String email) {
     return authUserDao.getUserByEmail(email)
-        .map(user -> new AuthResponseDto(user.getId(), user.getEmail()));
+        .map(user -> new AuthResponseDto(user.getId(), user.getUserId(), user.getEmail()));
   }
 
   @Override
   public Optional<AuthResponseDto> getById(Long id) {
     return authUserDao.getUserById(id)
-        .map(user -> new AuthResponseDto(user.getId(), user.getEmail()));
+        .map(user -> new AuthResponseDto(user.getId(), user.getUserId(), user.getEmail()));
   }
 
   @Override

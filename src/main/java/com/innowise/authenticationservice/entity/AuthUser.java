@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 public class AuthUser {
 
   private Long id;
+  private Long userId;
   private String email;
   private String passwordHash;
   private Instant createdAt;

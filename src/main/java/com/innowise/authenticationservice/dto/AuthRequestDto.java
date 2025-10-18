@@ -2,6 +2,7 @@ package com.innowise.authenticationservice.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +15,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AuthRequestDto {
 
+  @NotNull(message = "User ID can't be empty")
   private Long userId;
 
   @NotBlank(message = "Email can't be empty")
