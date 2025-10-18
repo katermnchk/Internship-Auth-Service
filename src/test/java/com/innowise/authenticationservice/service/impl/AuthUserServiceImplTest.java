@@ -196,7 +196,7 @@ class AuthUserServiceImplTest {
 
     authUserService.updatePassword(dto);
 
-    verify(authUserDao).updatePassword(eq(userId), anyString());
+    verify(authUserDao).updatePassword(eq(internalId), anyString());
     verify(refreshTokenService).revokeAllForUser(userId);
   }
 
