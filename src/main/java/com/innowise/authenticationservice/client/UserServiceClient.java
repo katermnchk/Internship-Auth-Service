@@ -6,10 +6,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "user-service", url = "${services.user.url}")
+@FeignClient(name = "user-service",
+    url = "${services.user.url}",
+    configuration = FeignClientConfig.class)
 public interface UserServiceClient {
 
-  @PostMapping("/api/v1/users")
+  @PostMapping("/api/v1/internal/users")
   ApiResponseWrapper<UserResponse> createUser(@RequestBody UserCreationRequest request);
 
   @DeleteMapping("/api/v1/users/{id}")

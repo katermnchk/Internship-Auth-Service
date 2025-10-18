@@ -27,6 +27,10 @@ services:
   user:
     url: ${SERVICES_USER_URL:http://localhost:8080}
 
+internal:
+  api:
+    header-name: "Internal-Service-Secret"
+    secret: ${INTERNAL_API_SECRET}
 
 server:
   port: 9001

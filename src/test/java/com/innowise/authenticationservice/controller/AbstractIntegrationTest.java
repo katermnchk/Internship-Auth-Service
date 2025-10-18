@@ -37,6 +37,7 @@ public abstract class AbstractIntegrationTest {
   @DynamicPropertySource
   static void configureProperties(DynamicPropertyRegistry registry) {
     registry.add("services.user.url", () -> "http://localhost:9999");
+    registry.add("INTERNAL_API_SECRET", () -> "test-secret-key");
   }
 
   @ServiceConnection
