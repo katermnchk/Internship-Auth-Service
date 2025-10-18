@@ -59,7 +59,7 @@ public class AuthUserServiceImpl implements AuthUserService {
 
   @Override
   public Optional<AuthResponseDto> getById(Long id) {
-    return authUserDao.getUserById(id)
+    return authUserDao.getUserByUserId(id)
         .map(user -> new AuthResponseDto(user.getId(), user.getUserId(), user.getEmail()));
   }
 
@@ -71,7 +71,7 @@ public class AuthUserServiceImpl implements AuthUserService {
   @Override
   @Transactional
   public void updatePassword(PasswordUpdateDto dto) {
-    AuthUser user = authUserDao.getUserById(dto.getUserId())
+    AuthUser user = authUserDao.getUserByUserId(dto.getUserId())
         .orElseThrow(() -> new UserNotFoundException(dto.getUserId()));
 
     if (!PasswordUtil.checkPassword(dto.getOldPassword(), user.getPasswordHash())) {
@@ -81,7 +81,7 @@ public class AuthUserServiceImpl implements AuthUserService {
     String hashedPassword = BCrypt.hashpw(dto.getNewPassword(), BCrypt.gensalt());
     authUserDao.updatePassword(dto.getUserId(), hashedPassword);
 
-    refreshTokenService.revokeAllForUser(user.getId());
+    refreshTokenService.revokeAllForUser(user.getUserId());
   }
 
 }

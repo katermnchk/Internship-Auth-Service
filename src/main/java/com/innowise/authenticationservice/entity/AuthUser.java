@@ -17,8 +17,9 @@ public class AuthUser {
   private Instant createdAt;
   private Instant updatedAt;
 
-  public AuthUser(Long id, String email, String passwordHash) {
+  public AuthUser(Long id, Long userId, String email, String passwordHash) {
     this.id = id;
+    this.userId = userId;
     this.email = email;
     this.passwordHash = passwordHash;
   }

@@ -65,20 +65,22 @@ class AuthUserServiceImplTest {
   @Test
   void givenValidRequest_whenRegister_thenReturnAuthResponse() {
     AuthRequestDto request = new AuthRequestDto(1L, "test@example.com", "password123");
-    AuthUser savedUser = new AuthUser(1L, "test@example.com", "hashedPass");
+    AuthUser savedUser = new AuthUser(100L, 1L,  "test@example.com", "hashedPass");
 
     when(authUserDao.existsByEmail(request.getEmail())).thenReturn(false);
     passwordUtilMock.when(() -> PasswordUtil.hashPassword(request.getPassword())).thenReturn("hashedPass");
-    when(authUserDao.save(request.getEmail(), "hashedPass")).thenReturn(savedUser);
+    when(authUserDao.save(request.getUserId(), request.getEmail(), "hashedPass"))
+        .thenReturn(savedUser);
 
     AuthResponseDto response = authUserService.register(request);
 
     assertAll(
         () -> assertThat(response.getId(), is(savedUser.getId())),
+        () -> assertThat(response.getUserId(), is(savedUser.getUserId())),
         () -> assertThat(response.getEmail(), is(savedUser.getEmail()))
     );
 
-    verify(authUserDao).save(request.getEmail(), "hashedPass");
+    verify(authUserDao).save(request.getUserId(), request.getEmail(), "hashedPass");
   }
 
   @Test
@@ -90,13 +92,13 @@ class AuthUserServiceImplTest {
     assertThrows(UserAlreadyExistsException.class,
         () -> authUserService.register(request));
 
-    verify(authUserDao, never()).save(any(), any());
+    verify(authUserDao, never()).save(any(Long.class), any(String.class), any(String.class));
   }
 
   @Test
   void givenValidCredentials_whenLogin_thenReturnAuthResponse() {
     AuthRequestDto request = new AuthRequestDto(1L, "test@example.com", "password123");
-    AuthUser user = new AuthUser(1L, "test@example.com", "hashedPass");
+    AuthUser user = new AuthUser(100L, 1L, "test@example.com", "hashedPass");
 
     when(authUserDao.getUserByEmail(request.getEmail())).thenReturn(Optional.of(user));
     passwordUtilMock.when(() -> PasswordUtil.checkPassword(request.getPassword(), user.getPasswordHash()))
@@ -106,6 +108,7 @@ class AuthUserServiceImplTest {
 
     assertAll(
         () -> assertThat(response.getId(), is(user.getId())),
+        () -> assertThat(response.getUserId(), is(user.getUserId())),
         () -> assertThat(response.getEmail(), is(user.getEmail()))
     );
   }
@@ -123,7 +126,7 @@ class AuthUserServiceImplTest {
   @Test
   void givenWrongPassword_whenLogin_thenThrowInvalidPasswordException() {
     AuthRequestDto request = new AuthRequestDto(1L, "test@example.com", "wrongPass");
-    AuthUser user = new AuthUser(1L, "test@example.com", "hashedPass");
+    AuthUser user = new AuthUser(100L, 1L, "test@example.com", "hashedPass");
 
     when(authUserDao.getUserByEmail(request.getEmail())).thenReturn(Optional.of(user));
     passwordUtilMock.when(() -> PasswordUtil.checkPassword(request.getPassword(), user.getPasswordHash()))
@@ -135,7 +138,7 @@ class AuthUserServiceImplTest {
 
   @Test
   void givenExistingUser_whenGetByEmail_thenReturnAuthResponse() {
-    AuthUser user = new AuthUser(1L, "test@example.com", "hashedPass");
+    AuthUser user = new AuthUser(100L, 1L, "test@example.com", "hashedPass");
 
     when(authUserDao.getUserByEmail("test@example.com")).thenReturn(Optional.of(user));
 
@@ -143,7 +146,8 @@ class AuthUserServiceImplTest {
 
     assertAll(
         () -> assertTrue(result.isPresent()),
-        () -> assertThat(result.get().getEmail(), is(user.getEmail()))
+        () -> assertThat(result.get().getEmail(), is(user.getEmail())),
+        () -> assertThat(result.get().getUserId(), is(user.getUserId()))
     );
   }
 
@@ -159,10 +163,11 @@ class AuthUserServiceImplTest {
   @Test
   void givenExistingUser_whenUpdatePasswordWithCorrectOldPassword_thenPasswordUpdatedAndTokensRevoked() {
     Long userId = 1L;
+    Long internalId = 100L;
     PasswordUpdateDto dto = new PasswordUpdateDto(userId, "oldPass", "newPass");
-    AuthUser user = new AuthUser(userId, "test@example.com", "oldHash");
+    AuthUser user = new AuthUser(internalId, userId, "test@example.com", "oldHash");
 
-    when(authUserDao.getUserById(userId)).thenReturn(Optional.of(user));
+    when(authUserDao.getUserByUserId(userId)).thenReturn(Optional.of(user));
     passwordUtilMock.when(() -> PasswordUtil.checkPassword(dto.getOldPassword(), user.getPasswordHash()))
         .thenReturn(true);
 
@@ -175,10 +180,11 @@ class AuthUserServiceImplTest {
   @Test
   void givenWrongOldPassword_whenUpdatePassword_thenThrowInvalidOldPasswordException() {
     Long userId = 1L;
+    Long internalId = 100L;
     PasswordUpdateDto dto = new PasswordUpdateDto(userId, "wrongOld", "newPass");
-    AuthUser user = new AuthUser(userId, "test@example.com", "oldHash");
+    AuthUser user = new AuthUser(internalId, userId, "test@example.com", "oldHash");
 
-    when(authUserDao.getUserById(userId)).thenReturn(Optional.of(user));
+    when(authUserDao.getUserByUserId(userId)).thenReturn(Optional.of(user));
     passwordUtilMock.when(() -> PasswordUtil.checkPassword(dto.getOldPassword(), user.getPasswordHash()))
         .thenReturn(false);
 

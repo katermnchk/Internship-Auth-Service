@@ -23,10 +23,10 @@ public class AuthUserDaoImpl implements AuthUserDao {
         RETURNING id, user_id, email, password_hash, created_at, updated_at
         """;
 
-    static final String GET_USER_BY_ID = """
+    static final String GET_USER_BY_USER_ID = """
         SELECT id, user_id, email, password_hash, created_at, updated_at
         FROM auth_users
-        WHERE id = ?
+        WHERE user_id = ?
         """;
 
     static final String GET_USER_BY_EMAIL = """
@@ -60,11 +60,11 @@ public class AuthUserDaoImpl implements AuthUserDao {
   }
 
   @Override
-  public Optional<AuthUser> getUserById(Long id) {
+  public Optional<AuthUser> getUserByUserId(Long userId) {
     return jdbcTemplate.query(
-        SQL.GET_USER_BY_ID,
+        SQL.GET_USER_BY_USER_ID,
         mapper,
-        id
+        userId
     ).stream().findFirst();
   }
 

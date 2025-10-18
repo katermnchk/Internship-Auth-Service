@@ -50,6 +50,7 @@ class AuthenticationServiceImplTest {
   private AuthenticationServiceImpl authenticationService;
 
   private final Long userId = 1L;
+  private final Long internalId = 100L;
 
   @BeforeEach
   void setUp() {
@@ -59,7 +60,7 @@ class AuthenticationServiceImplTest {
   @Test
   void givenValidCredentials_whenLogin_thenReturnTokensAndRevokeOldOnes() {
     AuthRequestDto request = new AuthRequestDto(userId, "test@example.com", "password123");
-    AuthResponseDto user = new AuthResponseDto(userId, "test@example.com");
+    AuthResponseDto user = new AuthResponseDto(internalId, userId, "test@example.com");
 
     when(authUserService.login(request)).thenReturn(user);
 

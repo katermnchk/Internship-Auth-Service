@@ -9,7 +9,7 @@ public interface AuthUserDao {
 
   Optional<AuthUser> getUserByEmail(String email);
 
-  Optional<AuthUser> getUserById(Long id);
+  Optional<AuthUser> getUserByUserId(Long userid);
 
   boolean existsByEmail(String email);
 
