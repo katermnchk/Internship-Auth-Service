@@ -9,9 +9,9 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.innowise.authenticationservice.dto.AuthRequestDto;
 import com.innowise.authenticationservice.dto.AuthResponseDto;
 import com.innowise.authenticationservice.dto.AuthTokensDto;
+import com.innowise.authenticationservice.dto.LoginRequestDto;
 import com.innowise.authenticationservice.dto.RefreshTokenDto;
 import com.innowise.authenticationservice.entity.RefreshToken;
 import com.innowise.authenticationservice.exception.InvalidRefreshTokenException;
@@ -59,7 +59,7 @@ class AuthenticationServiceImplTest {
 
   @Test
   void givenValidCredentials_whenLogin_thenReturnTokensAndRevokeOldOnes() {
-    AuthRequestDto request = new AuthRequestDto(userId, "test@example.com", "password123");
+    LoginRequestDto request = new LoginRequestDto("test@example.com", "password123");
     AuthResponseDto user = new AuthResponseDto(internalId, userId, "test@example.com");
 
     when(authUserService.login(request)).thenReturn(user);

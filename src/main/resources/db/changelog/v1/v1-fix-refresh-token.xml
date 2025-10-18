@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="v1-3" author="ramenchyk-katsiaryna">
+
+    <dropForeignKeyConstraint baseTableName="refresh_tokens"
+      constraintName="fk_refresh_user"/>
+    <addForeignKeyConstraint baseTableName="refresh_tokens"
+      baseColumnNames="user_id"
+      constraintName="fk_refresh_user_on_user_id"
+      referencedTableName="auth_users"
+      referencedColumnNames="user_id"/>
+
+    <rollback>
+      <dropForeignKeyConstraint baseTableName="refresh_tokens"
+        constraintName="fk_refresh_user_on_user_id"/>
+
+      <addForeignKeyConstraint baseTableName="refresh_tokens"
+        baseColumnNames="user_id"
+        constraintName="fk_refresh_user"
+        referencedTableName="auth_users"
+        referencedColumnNames="id"/>
+    </rollback>
+
+  </changeSet>
+
+</databaseChangeLog>

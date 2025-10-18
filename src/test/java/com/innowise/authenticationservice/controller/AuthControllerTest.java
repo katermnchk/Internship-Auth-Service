@@ -1,11 +1,17 @@
 package com.innowise.authenticationservice.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.innowise.authenticationservice.client.ApiResponseWrapper;
+import com.innowise.authenticationservice.client.UserResponse;
+import com.innowise.authenticationservice.client.UserServiceClient;
 import com.innowise.authenticationservice.dto.AuthRequestDto;
 import com.innowise.authenticationservice.dto.AuthTokensDto;
+import com.innowise.authenticationservice.dto.LoginRequestDto;
 import com.innowise.authenticationservice.dto.PasswordUpdateDto;
+import com.innowise.authenticationservice.dto.RegistrationRequestDto;
 import com.innowise.authenticationservice.dto.response.ApiResponse;
 import com.jayway.jsonpath.JsonPath;
+import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,6 +20,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.stream.Stream;
@@ -23,6 +30,8 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -33,18 +42,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 class AuthControllerTest extends AbstractIntegrationTest {
 
+  @MockitoBean
+  private UserServiceClient userServiceClient;
+
   @BeforeEach
   void cleanDatabase() {
     jdbcTemplate.update("DELETE FROM refresh_tokens");
     jdbcTemplate.update("DELETE FROM auth_users");
   }
 
-  private static final Long TEST_USER_ID = 1L;
+  private static final Long TEST_USER_ID = 42L;
   private static final String TEST_USER_EMAIL = "user@example.com";
   private static final String TEST_USER_PASSWORD = "password123";
 
-  private AuthRequestDto defaultAuthRequest() {
-    return new AuthRequestDto(TEST_USER_ID, TEST_USER_EMAIL, TEST_USER_PASSWORD);
+  private RegistrationRequestDto defaultRegistrationRequest() {
+    RegistrationRequestDto dto = new RegistrationRequestDto();
+    dto.setEmail(TEST_USER_EMAIL);
+    dto.setPassword(TEST_USER_PASSWORD);
+    dto.setName("Test");
+    dto.setSurname("User");
+    dto.setBirthDate(LocalDate.of(2000, 1, 1));
+    return dto;
+  }
+
+  private LoginRequestDto defaultLoginRequest() {
+    return new LoginRequestDto(TEST_USER_EMAIL, TEST_USER_PASSWORD);
   }
 
   private AuthRequestDto authRequest(Long userId, String email, String password) {
@@ -56,7 +78,12 @@ class AuthControllerTest extends AbstractIntegrationTest {
 
     @Test
     void givenValidRequest_whenRegister_thenUserIsCreated() throws Exception {
-      AuthRequestDto request = defaultAuthRequest();
+
+      RegistrationRequestDto request = defaultRegistrationRequest();
+
+      ApiResponseWrapper<UserResponse> fakeApiResponse =
+          new ApiResponseWrapper<>(new UserResponse(TEST_USER_ID));
+      when(userServiceClient.createUser(any())).thenReturn(fakeApiResponse);
 
       mockMvc.perform(post("/api/v1/auth/register")
               .contentType(MediaType.APPLICATION_JSON)
@@ -65,7 +92,8 @@ class AuthControllerTest extends AbstractIntegrationTest {
           .andExpectAll(
               jsonPath("$.status", is(201)),
               jsonPath("$.message", is("User registered successfully")),
-              jsonPath("$.data.email", is("user@example.com"))
+              jsonPath("$.data.email", is(request.getEmail())),
+              jsonPath("$.data.userId", is(TEST_USER_ID.intValue()))
           );
 
       assertTrue(authUserDao.existsByEmail(request.getEmail()));
@@ -73,7 +101,8 @@ class AuthControllerTest extends AbstractIntegrationTest {
 
     @Test
     void givenExistingEmail_whenRegister_thenConflict() throws Exception {
-      AuthRequestDto request = defaultAuthRequest();
+      RegistrationRequestDto request = defaultRegistrationRequest();
+      when(userServiceClient.createUser(any())).thenReturn(new ApiResponseWrapper<>(new UserResponse(1L)));
 
       mockMvc.perform(post("/api/v1/auth/register")
               .contentType(MediaType.APPLICATION_JSON)
@@ -87,19 +116,41 @@ class AuthControllerTest extends AbstractIntegrationTest {
           .andExpect(jsonPath("$.error", is("Conflict")));
     }
 
-    private static Stream<Arguments> provideInvalidAuthRequests() {
+    private static Stream<Arguments> provideInvalidRegistrationRequests() {
+      RegistrationRequestDto valid = new AuthControllerTest().defaultRegistrationRequest();
       return Stream.of(
-          Arguments.of(new AuthRequestDto(1L, "invalid-email", "password123"), "email: Email should be valid"),
-          Arguments.of(new AuthRequestDto(1L, "test@example.com", "short"), "password: Password should contain from 8 to 255 symbols"),
-          Arguments.of(new AuthRequestDto(1L, "", "password123"), "email: Email can't be empty"),
-          Arguments.of(new AuthRequestDto(1L, "test@example.com", ""), "password: Password can't be empty")
+          Arguments.of(new RegistrationRequestDto(
+                  valid.getEmail(),
+                  "short",
+                  valid.getName(),
+                  valid.getSurname(),
+                  valid.getBirthDate()
+              ),
+              "password: size must be between 8 and 255"
+          ),
+          Arguments.of(new RegistrationRequestDto(
+                  "invalid-email",
+                  valid.getPassword(),
+                  valid.getName(),
+                  valid.getSurname(),
+                  valid.getBirthDate()
+              ),
+              "email: must be a well-formed email address"
+          ),
+          Arguments.of(new RegistrationRequestDto(
+              valid.getEmail(),
+              valid.getPassword(),
+              "",
+              valid.getSurname(),
+              valid.getBirthDate()
+          ), "name: must not be blank")
       );
     }
 
     @ParameterizedTest()
-    @MethodSource("provideInvalidAuthRequests")
+    @MethodSource("provideInvalidRegistrationRequests")
     void givenInvalidRequest_whenRegister_thenBadRequest(
-        AuthRequestDto invalidDto, String expectedError
+        RegistrationRequestDto invalidDto, String expectedError
     ) throws Exception {
       mockMvc.perform(post("/api/v1/auth/register")
               .contentType(MediaType.APPLICATION_JSON)
@@ -117,14 +168,16 @@ class AuthControllerTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void registerUser() throws Exception {
+      when(userServiceClient.createUser(any()))
+          .thenReturn(new ApiResponseWrapper<>(new UserResponse(TEST_USER_ID)));
       mockMvc.perform(post("/api/v1/auth/register")
           .contentType(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(defaultAuthRequest())));
+          .content(objectMapper.writeValueAsString(defaultRegistrationRequest())));
     }
 
     @Test
     void givenValidCredentials_whenLogin_thenReturnTokens() throws Exception {
-      AuthRequestDto request = defaultAuthRequest();
+      LoginRequestDto request = defaultLoginRequest();
 
       mockMvc.perform(post("/api/v1/auth/login")
               .contentType(MediaType.APPLICATION_JSON)
@@ -161,25 +214,27 @@ class AuthControllerTest extends AbstractIntegrationTest {
   @Nested
   class AuthenticatedEndpoints {
 
-    private Long testUserId;
+    private Long externalUserId;
     private String accessToken;
     private String refreshToken;
-    private final AuthRequestDto testUser = defaultAuthRequest();
 
     @BeforeEach
     void registerAndLoginUser() throws Exception {
+      when(userServiceClient.createUser(any()))
+          .thenReturn(new ApiResponseWrapper<>(new UserResponse(TEST_USER_ID)));
+
       MvcResult registerResult = mockMvc.perform(post("/api/v1/auth/register")
               .contentType(MediaType.APPLICATION_JSON)
-              .content(objectMapper.writeValueAsString(testUser)))
+              .content(objectMapper.writeValueAsString(defaultRegistrationRequest())))
           .andExpect(status().isCreated())
           .andReturn();
 
       String registerResponse = registerResult.getResponse().getContentAsString();
-      this.testUserId = JsonPath.parse(registerResponse).read("$.data.id", Long.class);
+          this.externalUserId = JsonPath.parse(registerResponse).read("$.data.userId", Long.class);
 
       MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
               .contentType(MediaType.APPLICATION_JSON)
-              .content(objectMapper.writeValueAsString(testUser)))
+              .content(objectMapper.writeValueAsString(defaultLoginRequest())))
           .andExpect(status().isOk())
           .andReturn();
 
@@ -202,7 +257,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     void givenValidPasswordUpdate_whenUpdate_thenPasswordChanges() throws Exception {
       PasswordUpdateDto passwordUpdate =
-          new PasswordUpdateDto(this.testUserId, TEST_USER_PASSWORD, "newPassword123");
+          new PasswordUpdateDto(this.externalUserId, TEST_USER_PASSWORD, "newPassword123");
 
       mockMvc.perform(patch("/api/v1/auth/password")
               .contentType(MediaType.APPLICATION_JSON)
@@ -212,7 +267,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
 
       mockMvc.perform(post("/api/v1/auth/login")
               .contentType(MediaType.APPLICATION_JSON)
-              .content(objectMapper.writeValueAsString(testUser)))
+              .content(objectMapper.writeValueAsString(defaultLoginRequest())))
           .andExpect(status().isBadRequest());
     }
 
@@ -222,7 +277,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
           .andExpect(status().isOk())
           .andExpectAll(
               jsonPath("$.data.isValid", is(true)),
-              jsonPath("$.data.userId", is(this.testUserId.toString()))
+              jsonPath("$.data.userId", is(this.externalUserId.toString()))
           );
     }
 

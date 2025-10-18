@@ -21,3 +21,12 @@ security:
 app:
   api:
     base-path: /api/v1
+
+
+services:
+  user:
+    url: ${SERVICES_USER_URL:http://localhost:8080}
+
+
+server:
+  port: 9001

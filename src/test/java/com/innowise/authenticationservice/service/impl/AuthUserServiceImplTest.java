@@ -14,9 +14,15 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.innowise.authenticationservice.client.ApiResponseWrapper;
+import com.innowise.authenticationservice.client.UserCreationRequest;
+import com.innowise.authenticationservice.client.UserResponse;
+import com.innowise.authenticationservice.client.UserServiceClient;
 import com.innowise.authenticationservice.dto.AuthRequestDto;
 import com.innowise.authenticationservice.dto.AuthResponseDto;
+import com.innowise.authenticationservice.dto.LoginRequestDto;
 import com.innowise.authenticationservice.dto.PasswordUpdateDto;
+import com.innowise.authenticationservice.dto.RegistrationRequestDto;
 import com.innowise.authenticationservice.entity.AuthUser;
 import com.innowise.authenticationservice.exception.InvalidOldPasswordException;
 import com.innowise.authenticationservice.exception.InvalidPasswordException;
@@ -25,6 +31,9 @@ import com.innowise.authenticationservice.exception.UserNotFoundException;
 import com.innowise.authenticationservice.repository.AuthUserDao;
 import com.innowise.authenticationservice.service.RefreshTokenService;
 import com.innowise.authenticationservice.util.PasswordUtil;
+import java.time.Instant;
+import java.time.LocalDate;
+import lombok.extern.java.Log;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +56,9 @@ class AuthUserServiceImplTest {
   @Mock
   private RefreshTokenService refreshTokenService;
 
+  @Mock
+  private UserServiceClient userServiceClient;
+
   @InjectMocks
   private AuthUserServiceImpl authUserService;
 
@@ -63,41 +75,52 @@ class AuthUserServiceImplTest {
   }
 
   @Test
-  void givenValidRequest_whenRegister_thenReturnAuthResponse() {
-    AuthRequestDto request = new AuthRequestDto(1L, "test@example.com", "password123");
-    AuthUser savedUser = new AuthUser(100L, 1L,  "test@example.com", "hashedPass");
+  void givenValidRequest_whenRegister_thenCallUserServiceAndSaveCredentials() {
+    long expectedUserId = 123L;
+    RegistrationRequestDto request = new RegistrationRequestDto();
+    request.setEmail("test@example.com");
+    request.setPassword("password123");
+    request.setName("John");
+    request.setSurname("Doe");
+    request.setBirthDate(LocalDate.of(1990, 1, 1));
+
+    AuthUser savedUser =
+        new AuthUser(1L, expectedUserId, "test@example.com", "hashedPass", Instant.now(), Instant.now());
+    ApiResponseWrapper<UserResponse> userApiResponse =
+        new ApiResponseWrapper<>(new UserResponse(expectedUserId));
 
     when(authUserDao.existsByEmail(request.getEmail())).thenReturn(false);
+    when(userServiceClient.createUser(any(UserCreationRequest.class))).thenReturn(userApiResponse);
     passwordUtilMock.when(() -> PasswordUtil.hashPassword(request.getPassword())).thenReturn("hashedPass");
-    when(authUserDao.save(request.getUserId(), request.getEmail(), "hashedPass"))
-        .thenReturn(savedUser);
+    when(authUserDao.save(expectedUserId, request.getEmail(), "hashedPass")).thenReturn(savedUser);
 
     AuthResponseDto response = authUserService.register(request);
 
     assertAll(
-        () -> assertThat(response.getId(), is(savedUser.getId())),
-        () -> assertThat(response.getUserId(), is(savedUser.getUserId())),
-        () -> assertThat(response.getEmail(), is(savedUser.getEmail()))
+        () -> assertThat(response.getUserId(), is(expectedUserId)),
+        () -> assertThat(response.getEmail(), is(request.getEmail()))
     );
 
-    verify(authUserDao).save(request.getUserId(), request.getEmail(), "hashedPass");
+    verify(userServiceClient).createUser(any(UserCreationRequest.class));
+    verify(authUserDao).save(expectedUserId, request.getEmail(), "hashedPass");
   }
 
   @Test
   void givenExistingEmail_whenRegister_thenThrowUserAlreadyExistsException() {
-    AuthRequestDto request = new AuthRequestDto(1L, "test@example.com", "password123");
+    RegistrationRequestDto request = new RegistrationRequestDto();
+    request.setEmail("test@example.com");
 
     when(authUserDao.existsByEmail(request.getEmail())).thenReturn(true);
 
-    assertThrows(UserAlreadyExistsException.class,
-        () -> authUserService.register(request));
+    assertThrows(UserAlreadyExistsException.class, () -> authUserService.register(request));
 
-    verify(authUserDao, never()).save(any(Long.class), any(String.class), any(String.class));
+    verify(userServiceClient, never()).createUser(any());
+    verify(authUserDao, never()).save(any(), any(), any());
   }
 
   @Test
   void givenValidCredentials_whenLogin_thenReturnAuthResponse() {
-    AuthRequestDto request = new AuthRequestDto(1L, "test@example.com", "password123");
+    LoginRequestDto request = new LoginRequestDto("test@example.com", "password123");
     AuthUser user = new AuthUser(100L, 1L, "test@example.com", "hashedPass");
 
     when(authUserDao.getUserByEmail(request.getEmail())).thenReturn(Optional.of(user));
@@ -115,7 +138,7 @@ class AuthUserServiceImplTest {
 
   @Test
   void givenNonExistingEmail_whenLogin_thenThrowUserNotFoundException() {
-    AuthRequestDto request = new AuthRequestDto(1L, "unknown@example.com", "password123");
+    LoginRequestDto request = new LoginRequestDto("unknown@example.com", "password123");
 
     when(authUserDao.getUserByEmail(request.getEmail())).thenReturn(Optional.empty());
 
@@ -125,7 +148,7 @@ class AuthUserServiceImplTest {
 
   @Test
   void givenWrongPassword_whenLogin_thenThrowInvalidPasswordException() {
-    AuthRequestDto request = new AuthRequestDto(1L, "test@example.com", "wrongPass");
+    LoginRequestDto request = new LoginRequestDto("test@example.com", "wrongPass");
     AuthUser user = new AuthUser(100L, 1L, "test@example.com", "hashedPass");
 
     when(authUserDao.getUserByEmail(request.getEmail())).thenReturn(Optional.of(user));

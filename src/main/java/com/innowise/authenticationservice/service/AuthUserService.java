@@ -2,14 +2,16 @@ package com.innowise.authenticationservice.service;
 
 import com.innowise.authenticationservice.dto.AuthRequestDto;
 import com.innowise.authenticationservice.dto.AuthResponseDto;
+import com.innowise.authenticationservice.dto.LoginRequestDto;
 import com.innowise.authenticationservice.dto.PasswordUpdateDto;
+import com.innowise.authenticationservice.dto.RegistrationRequestDto;
 import java.util.Optional;
 
 public interface AuthUserService {
 
-  AuthResponseDto register(AuthRequestDto requestDto);
+  AuthResponseDto register(RegistrationRequestDto requestDto);
 
-  AuthResponseDto login(AuthRequestDto requestDto);
+  AuthResponseDto login(LoginRequestDto requestDto);
 
   Optional<AuthResponseDto> getByEmail(String email);
 
