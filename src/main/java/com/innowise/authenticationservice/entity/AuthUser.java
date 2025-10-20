@@ -11,13 +11,15 @@ import lombok.NoArgsConstructor;
 public class AuthUser {
 
   private Long id;
+  private Long userId;
   private String email;
   private String passwordHash;
   private Instant createdAt;
   private Instant updatedAt;
 
-  public AuthUser(Long id, String email, String passwordHash) {
+  public AuthUser(Long id, Long userId, String email, String passwordHash) {
     this.id = id;
+    this.userId = userId;
     this.email = email;
     this.passwordHash = passwordHash;
   }

@@ -3,6 +3,7 @@ package com.innowise.authenticationservice.service.impl;
 import com.innowise.authenticationservice.dto.AuthRequestDto;
 import com.innowise.authenticationservice.dto.AuthResponseDto;
 import com.innowise.authenticationservice.dto.AuthTokensDto;
+import com.innowise.authenticationservice.dto.LoginRequestDto;
 import com.innowise.authenticationservice.dto.RefreshTokenDto;
 import com.innowise.authenticationservice.entity.RefreshToken;
 import com.innowise.authenticationservice.exception.InvalidRefreshTokenException;
@@ -30,16 +31,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
   @Override
   @Transactional
-  public AuthTokensDto login(AuthRequestDto dto) {
+  public AuthTokensDto login(LoginRequestDto dto) {
     AuthResponseDto user = authUserService.login(dto);
 
     Map<String, String> tokens = TokenUtil.generateTokens(user, jwtService);
     String accessToken = tokens.get("accessToken");
     String refreshTokenValue = tokens.get("refreshToken");
 
-    refreshTokenService.revokeAllForUser(user.getId());
+    refreshTokenService.revokeAllForUser(user.getUserId());
 
-    RefreshTokenDto refreshTokenDto = new RefreshTokenDto(user.getId(), refreshTokenValue, refreshTokenExpiration);
+    RefreshTokenDto refreshTokenDto =
+        new RefreshTokenDto(user.getUserId(), refreshTokenValue, refreshTokenExpiration);
     refreshTokenService.createToken(refreshTokenDto);
 
     return new AuthTokensDto(accessToken, refreshTokenValue);
@@ -54,7 +56,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     refreshTokenService.revokeToken(refreshToken.getId());
 
-    AuthResponseDto user = new AuthResponseDto(refreshToken.getUserId(), null);
+    AuthResponseDto user = new AuthResponseDto(null, refreshToken.getUserId(), null);
     Map<String, String> tokens = TokenUtil.generateTokens(user, jwtService);
     String newAccessToken = tokens.get("accessToken");
     String newRefreshTokenValue = tokens.get("refreshToken");

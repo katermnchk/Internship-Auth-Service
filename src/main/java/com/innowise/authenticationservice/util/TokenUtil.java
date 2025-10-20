@@ -9,7 +9,7 @@ import java.util.UUID;
 public class TokenUtil {
 
   public static Map<String, String> generateTokens(AuthResponseDto user, JWTService jwtService) {
-    String accessToken = jwtService.generateAccessToken(user.getId());
+    String accessToken = jwtService.generateAccessToken(user.getUserId());
     String refreshToken = UUID.randomUUID().toString();
 
     Map<String, String> tokens = new HashMap<>();

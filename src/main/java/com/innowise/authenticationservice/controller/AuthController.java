@@ -3,7 +3,9 @@ package com.innowise.authenticationservice.controller;
 import com.innowise.authenticationservice.dto.AuthRequestDto;
 import com.innowise.authenticationservice.dto.AuthResponseDto;
 import com.innowise.authenticationservice.dto.AuthTokensDto;
+import com.innowise.authenticationservice.dto.LoginRequestDto;
 import com.innowise.authenticationservice.dto.PasswordUpdateDto;
+import com.innowise.authenticationservice.dto.RegistrationRequestDto;
 import com.innowise.authenticationservice.dto.response.ApiResponse;
 import com.innowise.authenticationservice.service.AuthUserService;
 import com.innowise.authenticationservice.service.AuthenticationService;
@@ -34,7 +36,7 @@ public class AuthController {
 
   @PostMapping("/register")
   public ResponseEntity<ApiResponse<AuthResponseDto>> register(
-      @Valid @RequestBody AuthRequestDto requestDto
+      @Valid @RequestBody RegistrationRequestDto requestDto
   ) {
     AuthResponseDto response = authUserService.register(requestDto);
     return ResponseEntity
@@ -45,7 +47,7 @@ public class AuthController {
 
   @PostMapping("/login")
   public ResponseEntity<ApiResponse<AuthTokensDto>> login(
-      @Valid @RequestBody AuthRequestDto requestDto
+      @Valid @RequestBody LoginRequestDto requestDto
   ) {
     AuthTokensDto tokens = authenticationService.login(requestDto);
     return ResponseEntity
