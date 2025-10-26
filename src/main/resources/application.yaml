@@ -33,4 +33,4 @@ internal:
     secret: ${INTERNAL_API_SECRET}
 
 server:
-  port: 9001
+  port: ${SERVER_PORT:8080}
